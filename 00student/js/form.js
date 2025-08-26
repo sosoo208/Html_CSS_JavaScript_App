@@ -30,9 +30,9 @@ studentForm.addEventListener("submit", function (event) {
         email: stuFormData.get("email").trim(),
         dateOfBirth: stuFormData.get("dateOfBirth"),
     }
-    
+
     //유효성 체크하는 함수 호출하기
-    if(!validateStudent(studentData)){
+    if (!validateStudent(studentData)) {
         //검증체크 실패하면 리턴하기
         return;
     }
@@ -53,6 +53,13 @@ function validateStudent(student) {// 필수 필드 검사
         alert("학번을 입력해주세요.");
         return false;
     }
+    // 학번 형식 검사 (예: 영문과 숫자 조합)
+    //const studentNumberPattern = /^[A-Za-z0-9]+$/;
+    const studentNumberPattern = /^[A-Za-z]\d{5}$/;
+    if (!studentNumberPattern.test(student.studentNumber)) {
+        alert("학번은 영문(S)과 숫자(5자리)만 입력 가능합니다.");
+        return false;
+    }
 
     if (!student.address) {
         alert("주소를 입력해주세요.");
@@ -66,13 +73,6 @@ function validateStudent(student) {// 필수 필드 검사
 
     if (!student.email) {
         alert("이메일을 입력해주세요.");
-        return false;
-    }
-    // 학번 형식 검사 (예: 영문과 숫자 조합)
-    //const studentNumberPattern = /^[A-Za-z0-9]+$/;
-    const studentNumberPattern = /^[A-Za-z]\d{5}$/;
-    if (!studentNumberPattern.test(student.studentNumber)) {
-        alert("학번은 영문(S)과 숫자(5자리)만 입력 가능합니다.");
         return false;
     }
 
@@ -96,10 +96,48 @@ function validateStudent(student) {// 필수 필드 검사
 function isValidEmail(email) {
     const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     return emailPattern.test(email);
-}
+}//isValidEmail
 
 //Student(학생) 목록을 Load 하는 함수
 function loadStudents() {
     console.log("학생 목록 Load 중.....");
+    fetch(`${API_BASE_URL}/api/students`) //Promise
+        .then((response) => {
+            if (!response.ok) {
+                throw new Error("학생 목록을 불러오는데 실패했습니다!.");
+            }
+            return response.json();
+        })
+        .then((students) => renderStudentTable(students))
+        .catch((error) => {
+            console.log("Error: " + error);
+            alert("학생 목록을 불러오는데 실패했습니다!.");
+        });
 };
 
+function renderStudentTable(students) {
+    console.log(students);
+    studentTableBody.innerHTML = "";
+
+    students.forEach((student) => {
+        //<tr> 엘리먼트를 생성하기
+        const row = document.createElement("tr");
+        
+        //<tr>의 content을 동적으로 생성
+        row.innerHTML = `
+                    <td>${student.name}</td>
+                    <td>${student.studentNumber}</td>
+                    <td>${student.detail ? student.detail.address : "-"}</td>
+                    <td>${student.detail?.phoneNumber?? "-"}</td>
+                    <td>${student.detail?.email ?? "-"}</td>
+                    <td>${student.detail?.dateOfBirth?? "-"}</td>
+                    <td>
+                        <button class="edit-btn" onclick="editStudent(${student.id})">수정</button>
+                        <button class="delete-btn" onclick="deleteStudent(${student.id})">삭제</button>
+                    </td>
+                `;
+        //<tbody>의 아래에 <tr>을 추가시켜 준다.
+        studentTableBody.appendChild(row);
+    });    
+
+}//renderStudentTable
