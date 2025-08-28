@@ -9,14 +9,14 @@ const submitButton = document.querySelector("button[type='submit']");
 const cancelButton = document.querySelector(".cancel-btn");
 const formErrorSpan = document.getElementById("formError");
 
-//Document Load 이벤트
+//Document Load 이벤트 처리
 document.addEventListener("DOMContentLoaded", function () {
     loadBooks();
 });
 
-//Form Submit 이벤트
+//Form Submit 이벤트 처리
 bookForm.addEventListener("submit", function (event) {
-    event.preventDefault();
+    event.preventDefault(); // 기본 동작 막기
     console.log("Form 제출됨...");
 
     const bookFormData = new FormData(bookForm);
@@ -25,9 +25,10 @@ bookForm.addEventListener("submit", function (event) {
         author: bookFormData.get("author").trim(),
         isbn: bookFormData.get("isbn").trim(),
         price: bookFormData.get("price").trim(),
-        publishDate: bookFormData.get("publishDate") || null
+        publishDate: bookFormData.get("publishDate") || null,
     };
 
+    //유효성 체크
     if (!validateBook(bookData)) {
         return;
     }
@@ -39,33 +40,13 @@ bookForm.addEventListener("submit", function (event) {
     }
 });
 
-//입력 데이터 유효성 검사
-function validateBook(book) {
-    if (!book.title) {
-        alert("제목을 입력해주세요.");
-        return false;
-    }
-    if (!book.author) {
-        alert("저자를 입력해주세요.");
-        return false;
-    }
-    if (!book.isbn) {
-        alert("ISBN을 입력해주세요.");
-        return false;
-    }
-    const isbnPattern = /^\d{10}(\d{3})?$/; // ISBN 10자리 or 13자리
-    if (!isbnPattern.test(book.isbn)) {
-        alert("ISBN은 10자리 또는 13자리 숫자여야 합니다.");
-        return false;
-    }
-    if (book.price && isNaN(book.price)) {
-        alert("가격은 숫자만 입력 가능합니다.");
-        return false;
-    }
-    return true;
-}
+//취소 버튼 이벤트 처리
+cancelButton.addEventListener("click", function () {
+    resetForm();
+});
 
-//도서 등록
+
+//도서 등록 함수
 function createBook(bookData) {
     fetch(`${API_BASE_URL}/api/books`, {
         method: "POST",
@@ -89,10 +70,37 @@ function createBook(bookData) {
         });
 }
 
-//도서 수정 전에 데이터 채우기
+//도서 삭제 함수
+function deleteBook(bookId, title) {
+    if (!confirm(`'${title}' 도서를 정말 삭제하시겠습니까?`)) {
+        return;
+    }
+    fetch(`${API_BASE_URL}/api/books/${bookId}`, {
+        method: "DELETE"
+    })
+        .then(async (response) => {
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.message || "도서 삭제 실패");
+            }
+            showSuccess("도서 삭제 완료!");
+            loadBooks();
+        })
+        .catch((error) => {
+            showError(error.message);
+        });
+}
+
+//도서 수정 전에 데이터 로드
 function editBook(bookId) {
     fetch(`${API_BASE_URL}/api/books/${bookId}`)
-        .then((response) => response.json())
+        .then(async (response) => {
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.message || "도서 조회 실패");
+            }
+            return response.json();
+        })
         .then((book) => {
             bookForm.title.value = book.title;
             bookForm.author.value = book.author;
@@ -109,7 +117,7 @@ function editBook(bookId) {
         });
 }
 
-//도서 수정 요청
+//도서 수정 처리
 function updateBook(bookId, bookData) {
     fetch(`${API_BASE_URL}/api/books/${bookId}`, {
         method: "PUT",
@@ -124,7 +132,7 @@ function updateBook(bookId, bookData) {
             return response.json();
         })
         .then(() => {
-            alert("도서 수정 완료!");
+            showSuccess("도서 수정 완료!");
             resetForm();
             loadBooks();
         })
@@ -133,34 +141,55 @@ function updateBook(bookId, bookData) {
         });
 }
 
-//도서 삭제
-function deleteBook(bookId, title) {
-    if (!confirm(`'${title}' 도서를 삭제하시겠습니까?`)) {
-        return;
-    }
-    fetch(`${API_BASE_URL}/api/books/${bookId}`, {
-        method: "DELETE"
-    })
-        .then((response) => {
-            if (!response.ok) {
-                throw new Error("삭제 실패");
-            }
-            showSuccess("도서 삭제 완료!");
-            loadBooks();
-        })
-        .catch((error) => {
-            showError(error.message);
-        });
+//Form 초기화 
+function resetForm() {
+    bookForm.reset();
+    editingBookId = null;
+    submitButton.textContent = "도서 등록";
+    cancelButton.style.display = "none";
+    clearMessages();
 }
 
-//도서 목록 로드
+//유효성 검사 함수
+function validateBook(book) {
+    if (!book.title) {
+        alert("제목을 입력해주세요.");
+        return false;
+    }
+    if (!book.author) {
+        alert("저자를 입력해주세요.");
+        return false;
+    }
+    if (!book.isbn) {
+        alert("ISBN을 입력해주세요.");
+        return false;
+    }
+    const isbnPattern = /^\d{10}(\d{3})?$/; // 10자리 or 13자리
+    if (!isbnPattern.test(book.isbn)) {
+        alert("ISBN은 10자리 또는 13자리 숫자여야 합니다.");
+        return false;
+    }
+    if (book.price && isNaN(book.price)) {
+        alert("가격은 숫자만 입력 가능합니다.");
+        return false;
+    }
+    return true;
+}
+
+//도서 목록 불러오기
 function loadBooks() {
     console.log("도서 목록 로드 중...");
     fetch(`${API_BASE_URL}/api/books`)
-        .then((response) => response.json())
+        .then(async (response) => {
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.message || "도서 목록 불러오기 실패");
+            }
+            return response.json();
+        })
         .then((books) => renderBookTable(books))
         .catch((error) => {
-            showError("도서 목록 불러오기 실패: " + error.message);
+            showError(error.message);
             bookTableBody.innerHTML = `
                 <tr>
                     <td colspan="6" style="text-align:center; color:#dc3545;">
@@ -180,39 +209,28 @@ function renderBookTable(books) {
             <td>${book.title}</td>
             <td>${book.author}</td>
             <td>${book.isbn}</td>
-            <td>${book.price ?? "-"}</td>
-            <td>${book.publishDate ?? "-"}</td>
+            <td>${book.price ? Number(book.price).toLocaleString() : "-"}</td>
+            <td>${book.publishDate ? book.publishDate.substring(0, 10) : "-"}</td>
             <td>
-                <button onclick="editBook(${book.id})">수정</button>
-                <button onclick="deleteBook(${book.id}, '${book.title}')">삭제</button>
+                <button class="edit-btn" onclick="editBook(${book.id})">수정</button>
+                <button class="delete-btn" onclick="deleteBook(${book.id}, '${book.title}')">삭제</button>
             </td>
         `;
         bookTableBody.appendChild(row);
     });
 }
 
-//입력필드 초기화
-function resetForm() {
-    bookForm.reset();
-    editingBookId = null;
-    submitButton.textContent = "도서 등록";
-    cancelButton.style.display = "none";
-    clearMessages();
-}
-
-//성공 메시지
+//메시지 출력
 function showSuccess(message) {
     formErrorSpan.textContent = message;
     formErrorSpan.style.display = "block";
     formErrorSpan.style.color = "#28a745";
 }
-//에러 메시지
 function showError(message) {
     formErrorSpan.textContent = message;
     formErrorSpan.style.display = "block";
     formErrorSpan.style.color = "#dc3545";
 }
-//메시지 초기화
 function clearMessages() {
     formErrorSpan.style.display = "none";
 }
