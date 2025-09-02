@@ -1,24 +1,110 @@
 ﻿body {
-    font-family: "맑은 고딕", "돋움", "굴림";               
-    /*
-    background: bg-color bg-image position/bg-size bg-repeat bg-origin bg-clip bg-attachment
-       bg-images : url('../images/bg.jpg') 
-       bg-repeat : no-repeat : 
-       bg-position (배경 위치) : left(가로위치-왼쪽) top(세로위치-상단) : 
-       bg-attachment (배경 고정) : fixed 페이지를 스크롤해도 배경은 움직이지 않음
-    */
-    
-    /*
-    background-size
-    : cover
-        비율 유지하며 요소 전체를 덮음
-        이미지 일부가 잘릴 수 있음
-        풀스크린 배경에 최적
-    : contain
-        비율 유지하며 요소 안에 완전 포함
-        여백이 생길 수 있음
-        로고, 아이콘에 최적
-    */
-    
+    margin: 0;
+    font-family: "맑은 고딕", Arial, sans-serif;
+    background: url("../images/bg.jpg") no-repeat center top;
+    background-size: cover;
 }
 
+#wrapper {
+    width: 900px;
+    margin: 40px auto;
+    background: #fff;
+    border: 1px solid #333;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.3); 
+}
+
+header {
+    padding: 20px;
+}
+header h1 {
+    margin: 0;
+    font-size: 2.5em;
+    color: #000;
+}
+
+nav {
+    background: #222;
+}
+nav ul {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    display: flex;
+}
+nav ul li {
+    flex: 1;
+}
+nav a {
+    display: block;
+    padding: 12px;
+    text-align: center;
+    text-decoration: none;
+    color: #fff;
+    font-weight: bold;
+    border-right: 1px solid #444;
+}
+nav a:last-child {
+    border-right: none;
+}
+nav a:hover {
+    background: #444;
+}
+nav a.current {
+    background: #fff;
+    color: #000;
+    border-bottom: 3px solid #000;
+}
+
+section {
+    padding: 20px;
+}
+article {
+    padding: 10px;
+}
+h2 {
+    background: url("../images/icon.png") no-repeat left center;
+    padding-left: 35px;
+    font-size: 1.5em;
+    margin-top: 0;
+    margin-bottom: 15px;
+}
+
+.boxImg {
+    display: block;
+    float: right;
+    margin:50px 15px 15px 15px;
+    border: 3px solid #666;
+    box-shadow: 3px 3px 5px rgba(0,0,0,0.3);
+    transform: rotate(10deg);
+}
+
+caption {
+    font-size: 1.2em;
+    font-weight: bold;
+    margin-bottom: 8px;
+    text-align: left;
+}
+table {
+    border-collapse: collapse;
+    width: 100%;
+}
+th, td {
+    border: 1px solid #999;
+    padding: 8px;
+}
+th {
+    background: #444;
+    color: #fff;
+    width: 120px;
+}
+
+footer {
+    background: #444;
+    color: #fff;
+    text-align: center;
+    padding: 15px;
+    font-size: 0.9em;
+}
+footer address {
+    font-style: normal;
+}
